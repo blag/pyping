@@ -34,9 +34,9 @@ else:
 
 
 # ICMP parameters
-ICMP_ECHOREPLY = 0 # Echo reply (per RFC792)
-ICMP_ECHO = 8 # Echo request (per RFC792)
-ICMP_MAX_RECV = 2048 # Max size of incoming buffer
+ICMP_ECHOREPLY = 0  # Echo reply (per RFC792)
+ICMP_ECHO = 8  # Echo request (per RFC792)
+ICMP_MAX_RECV = 2048  # Max size of incoming buffer
 
 MAX_SLEEP = 1000
 
@@ -67,11 +67,11 @@ def calculate_checksum(source_string):
 
     # Handle last byte if applicable (odd-number of bytes)
     # Endianness should be irrelevant in this case
-    if countTo < len(source_string): # Check for odd length
+    if countTo < len(source_string):  # Check for odd length
         loByte = source_string[len(source_string) - 1]
         sum += ord(loByte)
 
-    sum &= 0xffffffff # Truncate sum to 32 bits (a variance from ping.c, which uses signed ints, but overflow is unlikely in ping)
+    sum &= 0xffffffff  # Truncate sum to 32 bits (a variance from ping.c, which uses signed ints, but overflow is unlikely in ping)
 
     sum = (sum >> 16) + (sum & 0xffff)  # Add high 16 bits to low 16 bits
     sum += (sum >> 16)                  # Add carry from above (if any)
@@ -94,6 +94,7 @@ def is_valid_ip4_address(addr):
             return False
     return True
 
+
 def to_ip(addr):
     validated = False
     if is_valid_ip4_address(addr):
@@ -105,6 +106,7 @@ def to_ip(addr):
         except:
             pass
     return validated
+
 
 class Response(object):
     def __init__(self):
@@ -122,6 +124,7 @@ class Response(object):
         self.destination_ip = None
         self.unknown_host = False
 
+
 class Ping(object):
     def __init__(self, destination, timeout=1000, packet_size=55, own_id=None, quiet_output=True, udp=False, sourceaddress=False):
         self.quiet_output = quiet_output
@@ -135,7 +138,7 @@ class Ping(object):
         self.timeout = timeout
         self.packet_size = packet_size
         self.udp = udp
-        if sourceaddress != False:
+        if sourceaddress is not False:
             self.sourceaddress = socket.gethostbyname(sourceaddress)
 
         if own_id is None:
@@ -297,7 +300,7 @@ class Ping(object):
             if deadline and self.total_time >= deadline:
                 break
 
-            if delay == None:
+            if delay is None:
                 delay = 0
 
             # Pause for the remainder of the MAX_SLEEP period (if applicable)
@@ -312,7 +315,7 @@ class Ping(object):
         """
         Send one ICMP ECHO_REQUEST and receive the response until self.timeout
         """
-        try: # One could use UDP here, but it's obscure
+        try:  # One could use UDP here, but it's obscure
             if self.udp:
                 current_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.getprotobyname("icmp"))
                 if self.sourceaddress:
@@ -327,10 +330,10 @@ class Ping(object):
                     "%s - Note that ICMP messages can only be send from processes running as root." % evalue
                 )
                 raise etype, evalue, etb
-            raise # raise the original error
+            raise  # raise the original error
 
         send_time = self.send_one_ping(current_socket)
-        if send_time == None:
+        if send_time is None:
             return
         self.send_count += 1
 
@@ -371,7 +374,7 @@ class Ping(object):
         data = bytes(padBytes)
 
         # Calculate the checksum on the data and the dummy header.
-        checksum = calculate_checksum(header + data) # Checksum is in network order
+        checksum = calculate_checksum(header + data)  # Checksum is in network order
 
         # Now that we have the right checksum, we put that in. It's just easier
         # to make up a new header than to stuff it into the dummy.
@@ -384,7 +387,7 @@ class Ping(object):
         send_time = default_timer()
 
         try:
-            current_socket.sendto(packet, (self.destination, 1)) # Port number is irrelevant for ICMP
+            current_socket.sendto(packet, (self.destination, 1))  # Port number is irrelevant for ICMP
         except socket.error as e:
             self.response.output.append("General failure (%s)" % (e.args[1]))
             current_socket.close()
@@ -398,11 +401,11 @@ class Ping(object):
         """
         timeout = self.timeout / 1000.0
 
-        while True: # Loop while waiting for packet or timeout
+        while True:  # Loop while waiting for packet or timeout
             select_start = default_timer()
             inputready, outputready, exceptready = select.select([current_socket], [], [], timeout)
             select_duration = (default_timer() - select_start)
-            if inputready == []: # timeout
+            if inputready == []:  # timeout
                 return None, 0, 0, 0, 0
 
             receive_time = default_timer()
@@ -415,7 +418,7 @@ class Ping(object):
                 data=packet_data[20:28]
             )
 
-            if icmp_header["packet_id"] == self.own_id: # Our packet
+            if icmp_header["packet_id"] == self.own_id:  # Our packet
                 ip_header = self.header2dict(
                     names=[
                         "version", "type", "length",
@@ -433,6 +436,7 @@ class Ping(object):
             timeout = timeout - select_duration
             if timeout <= 0:
                 return None, 0, 0, 0, 0
+
 
 def ping(hostname, timeout=1000, count=3, packet_size=55, *args, **kwargs):
         p = Ping(hostname, timeout, packet_size, *args, **kwargs)
