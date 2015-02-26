@@ -176,7 +176,7 @@ class Ping(object):
         msg = "\nPYTHON-PING: Unknown host: %s (%s)\n" % (self.destination, e.args[1])
         if self.quiet_output:
             self.response.output.append(msg)
-            self.response.uknown_host = True
+            self.response.unknown_host = True
             self.response.ret_code = 1
         else:
             print(msg)
@@ -319,14 +319,14 @@ class Ping(object):
                     current_socket.bind((self.sourceaddress, 1))
             else:
                 current_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
-        except socket.error, (errno, msg):
-            if errno == 1:
+        except socket.error as e:
+            if e.errno == 1:
                 # Operation not permitted - Add more information to traceback
                 etype, evalue, etb = sys.exc_info()
                 evalue = etype(
                     "%s - Note that ICMP messages can only be send from processes running as root." % evalue
                 )
-                raise etype, evalue, etb
+                raise PermissionError(evalue)
             raise # raise the original error
 
         send_time = self.send_one_ping(current_socket)
@@ -371,7 +371,7 @@ class Ping(object):
         data = bytes(padBytes)
 
         # Calculate the checksum on the data and the dummy header.
-        checksum = calculate_checksum(header + data) # Checksum is in network order
+        checksum = calculate_checksum('{}{}'.format(header, data)) # Checksum is in network order
 
         # Now that we have the right checksum, we put that in. It's just easier
         # to make up a new header than to stuff it into the dummy.
