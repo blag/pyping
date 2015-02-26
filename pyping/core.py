@@ -125,8 +125,8 @@ class Response(object):
 class Ping(object):
     def __init__(self, destination, timeout=1000, packet_size=55, own_id=None, quiet_output=True, udp=False, sourceaddress=False):
         self.quiet_output = quiet_output
+        self.response = Response()
         if quiet_output:
-            self.response = Response()
             self.response.destination = destination
             self.response.timeout = timeout
             self.response.packet_size = packet_size
@@ -176,7 +176,7 @@ class Ping(object):
         msg = "\nPYTHON-PING: Unknown host: %s (%s)\n" % (self.destination, e.args[1])
         if self.quiet_output:
             self.response.output.append(msg)
-            self.response.uknown_host = True
+            self.response.unknown_host = True
             self.response.ret_code = 1
         else:
             print(msg)
